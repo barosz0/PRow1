@@ -28,12 +28,36 @@ int main(int argc, char* argv[])
     int i =0;
     omp_set_num_threads(4);
     #pragma omp parallel for schedule(static)
-    for (i =1; i<m;i++)
+    for(i=0;i<omp_get_num_threads();i++)
     {
-        //printf("%d ma %d\n",omp_get_thread_num(), i);
-        if(!isprime[i])
-            for(int j = i*2; j<m; j+=i)
-                isprime[j]=1;
+        int slice = m/omp_get_num_threads();
+
+        int from = i*slice;
+        int to = from+slice;
+        if(to>m)
+            to = m;
+
+        // int to = m - i*slice;
+        // int from = to - slice;
+
+        // if (from < 0)
+        //     from = 0;
+        
+
+
+        for(i=0;i<to;i++)
+        {
+            if(!isprime[i])
+            {
+                for(int j = i*2; j<m; j+=i)
+                {
+                    if(j>=from)
+                        isprime[j]=1;
+                }
+            }
+
+        }
+
     }
 
 
