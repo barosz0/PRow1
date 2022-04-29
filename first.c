@@ -2,14 +2,14 @@
 #include <time.h>
 #include <math.h>
 #include <string.h>
-//#include <omp.h>
+#include <omp.h>
 
 
 int main(int argc, char* argv[])
 {
 	clock_t spstart, spstop,ppstart,ppstop;
 	
-    int n = 0, m = 100;
+    int n = 0, m = 1000000;
 
 	double sswtime, sewtime;
 //volatile
@@ -17,12 +17,14 @@ int main(int argc, char* argv[])
     int tab[m];
 
     memset(tab,0,m);
+    tab[0]=1;
+    tab[1]=1;
 
 //SEKWENCYJNIE
-	//sswtime = omp_get_wtime();
+	sswtime = omp_get_wtime();
 	spstart = clock();
 
-	for (int i =2; i<sqrt(m);i++)
+	for (int i =2; i<m/2;i++)
     {
         
         if(tab[i])
@@ -39,12 +41,12 @@ int main(int argc, char* argv[])
     }
 
 	spstop = clock();
-    //sewtime = omp_get_wtime();
+    sewtime = omp_get_wtime();
    
-    for(int i = 0;i<m;i++){
-        if(!tab[i])
-            printf("%d ", i);
-    }
+    // for(int i = 0;i<m;i++){
+    //     if(tab[i]==0)
+    //         printf("%d ", i);
+    // }
     printf("\n");
 
 	printf("Czas procesorów przetwarzania sekwencyjnego  %f sekund \n", ((double)(spstop - spstart)/CLOCKS_PER_SEC));
