@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
     
     int prime_nums = 0;
 
-    for(int i = 0;i<m;i++){
+    for(int i = n;i<m;i++){
         if(!isprime[i])
             prime_nums++;
     }

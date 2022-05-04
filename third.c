@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
     
     char* isprime = (char*)calloc(m, sizeof(char));
 
-    memset(isprime,0,sizeof(isprime));
+    //memset(isprime,0,sizeof(isprime));
     isprime[0]=1;
     isprime[1]=1;
 
@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
     
     int prime_nums = 0;
 
-    for(int i = 0;i<m;i++){
+    for(int i = n;i<m;i++){
         if(!isprime[i])
             prime_nums++;
     }
