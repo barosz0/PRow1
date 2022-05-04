@@ -3,7 +3,7 @@
 #include <math.h>
 #include <string.h>
 #include <omp.h>
-
+#include <stdlib.h>
 
 
 int main(int argc, char* argv[])
@@ -15,7 +15,8 @@ int main(int argc, char* argv[])
 	double sswtime, sewtime;
 //volatile
 
-    int isprime[m];
+    
+    char* isprime = (char*)calloc(m, sizeof(char));
 
     memset(isprime,0,sizeof(isprime));
     isprime[0]=1;
@@ -25,14 +26,14 @@ int main(int argc, char* argv[])
 	sswtime = omp_get_wtime();
 	spstart = clock();
 
-    int i =0;
+    int i =0, id =0;
     omp_set_num_threads(4);
     #pragma omp parallel for schedule(static)
-    for(i=0;i<omp_get_num_threads();i++)
+    for(id=0;id<omp_get_num_threads();id++)
     {
         int slice = m/omp_get_num_threads();
 
-        int from = i*slice;
+        int from = id*slice;
         int to = from+slice;
         if(to>m)
             to = m;

@@ -3,6 +3,7 @@
 #include <math.h>
 #include <string.h>
 #include <omp.h>
+#include <stdlib.h>
 
 
 
@@ -15,9 +16,9 @@ int main(int argc, char* argv[])
 	double sswtime, sewtime;
 //volatile
 
-    int isprime[m];
+    
+    char* isprime = (char*)calloc(m, sizeof(char));
 
-    memset(isprime,0,sizeof(isprime));
     isprime[0]=1;
     isprime[1]=1;
 
