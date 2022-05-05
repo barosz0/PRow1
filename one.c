@@ -5,6 +5,8 @@
 #include <omp.h>
 #include <stdlib.h>
 
+# define Th_num 6
+
 
 void sito_sekwencyjnie(int n, int m)
 {
@@ -79,7 +81,7 @@ int sito_rownolegle(int n, int m)
 	spstart = clock();
 
     int i =0;
-    omp_set_num_threads(2);
+    omp_set_num_threads(Th_num);
     #pragma omp parallel for schedule(static)
     for (i =1; i<m;i++)
     {
@@ -124,8 +126,8 @@ int sito_rownolegle_blokowo(int n, int m)
     spstart = clock();
 
     int id;
-    omp_set_num_threads(2);
-    #pragma omp parallel for schedule(static, 1)
+    omp_set_num_threads(Th_num);
+    #pragma omp parallel for schedule(static)
     for ( id = 0; id < omp_get_num_threads(); id++)
     {
         int slice = m / omp_get_num_threads();
@@ -182,12 +184,12 @@ int main(int argc, char* argv[])
     int m = 100000000;
 
 
-    //sito_sekwencyjnie(n,m);
-    //sito_rownolegle(n,m);
+    sito_sekwencyjnie(n,m);
+    sito_rownolegle(n,m);
     sito_rownolegle_blokowo(n,m);
 
 
     return 0;
 }
 
-// gcc first.c -lm -fopenmp -o first.out
+// gcc one.c -lm -fopenmp
