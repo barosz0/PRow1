@@ -84,6 +84,8 @@ void sito_sekwencyjnie(int n, int m)
     }
     printf("%d \n", prime_nums);
 
+    //printPrimesNum(primes, m, n);
+
     printf("Czas procesorow przetwarzania sekwencyjnego  %f sekund \n", ((double)(spstop - spstart) / CLOCKS_PER_SEC));
     printf("Czas trwania obliczen sekwencyjnych - wallclock %f sekund \n", sewtime - sswtime);
 }
@@ -94,7 +96,7 @@ void sito_rownolegle(int n, int m)
 	
 
 	double sswtime, sewtime;
-//volatile
+    //volatile
 
     
     char* isprime = (char*)calloc(m, sizeof(char));
@@ -130,8 +132,7 @@ void sito_rownolegle(int n, int m)
     printf("%d \n",prime_nums);
 
 	printf("Czas procesorów przetwarzania rownoleglego  %f sekund \n", ((double)(spstop - spstart)/CLOCKS_PER_SEC));
-	printf("Czas trwania obliczen rownoleglego - wallclock %f sekund \n",  sewtime-sswtime);
-	
+	printf("Czas trwania obliczen rownoleglego - wallclock %f sekund \n",  sewtime-sswtime);	
 }
 
 void sito_rownolegle_blokowo(int n, int m)
@@ -249,15 +250,18 @@ void dzielenie_rownolegle(int min, int max) {
 
     pswtime = omp_get_wtime();
     ppstart = clock();
-
-    omp_set_num_threads(8);
-#pragma omp parallel firstprivate(min, max)
+    int minp, maxp;
+    omp_set_num_threads(Th_num);
+    #pragma omp parallel private(minp, maxp)
     {
-#pragma omp for schedule(guided, 80)
-        for (int i = 0; i <= max - min; i++) {
+        minp = min;
+        maxp = max;
+        int i;
+        #pragma omp for
+        for (i = 0; i <= maxp - minp; i++) {
             primes[i] = 1;
-            for (int j = 2; j <= (int)ceil(sqrt(i + min)); j++) {
-                if (((i + min) % j == 0) && (i + min != 2)) {
+            for (int j = 2; j <= (int)ceil(sqrt(i + minp)); j++) {
+                if (((i + minp) % j == 0) && (i + minp != 2)) {
                     primes[i] = 2;
                     break;
                 }
@@ -282,13 +286,14 @@ int main(int argc, char* argv[])
     int m = 10000;
 
 
-    //sito_sekwencyjnie(n,m);
+    sito_sekwencyjnie(n,m);
     //sito_rownolegle(n,m);
     //sito_rownolegle_blokowo(n,m);
-    dzielenie_sekwecyjnie(n, m);
-    dzielenie_rownolegle(n, m);
+    //dzielenie_sekwecyjnie(n, m);
+    //dzielenie_rownolegle(n, m);
 
     return 0;
 }
 
+//
 // gcc one.c -lm -fopenmp
