@@ -5,7 +5,7 @@
 #include <omp.h>
 #include <stdlib.h>
 
-# define Th_num 12
+# define Th_num 6
 
 
 void printPrimes(char* primes, long long max, long long min) {
@@ -34,6 +34,23 @@ void printPrimesNum(char* primes, long long max, long long min) {
     printf("Liczb pierwszych: %d\n", primeNums);
 }
 
+void printPrimesSito(char* primes, long long max, long long min)
+{
+    
+    int count = 0;
+    for (long long i = 0; i <= max - min; i++) {
+        if (primes[i] == 0) {
+            count++;
+            if (count == 10) {
+                printf("%d\n", i + min);
+                count = 0;
+            }
+            else
+                printf("%d ", i + min);
+        }
+    }
+}
+
 void sito_sekwencyjnie(long long n, long long m)
 {
     clock_t spstart, spstop, ppstart, ppstop;
@@ -54,21 +71,23 @@ void sito_sekwencyjnie(long long n, long long m)
     sswtime = omp_get_wtime();
     spstart = clock();
 
-    for (long long i = 0; i < m; i++)
+    long long to = sqrt(m);
+
+    for (long long i = 0; i < to; i++)
     {
 
-        if (isprime[i])
+        if (!isprime[i])
         {
-            continue;
-        }
 
-        long long j = 2;
-        long long num = i;
-        while (num * j < m)
-        {
-            //printf("%d kasuje %d \n",i, num *j);
-            isprime[num * j] = 1;
-            j++;
+
+            long long j = 2;
+            long long num = i;
+            while (num * j < m)
+            {
+                //printf("%d kasuje %d \n",i, num *j);
+                isprime[num * j] = 1;
+                j++;
+            }
         }
     }
 
@@ -110,8 +129,11 @@ void sito_rownolegle(long long n, long long m)
 
     long long i =0;
     omp_set_num_threads(Th_num);
+
+    long long to = sqrt(m);
+
     #pragma omp parallel for schedule(static)
-    for (i =1; i<m;i++)
+    for (i =1; i<to;i++)
     {
         //printf("%d ma %d\n",omp_get_thread_num(), i);
         if(!isprime[i])
@@ -135,6 +157,60 @@ void sito_rownolegle(long long n, long long m)
 	printf("Czas trwania obliczen rownoleglego - wallclock %f sekund \n",  sewtime-sswtime);	
 }
 
+
+void sito_rownolegle_v2(long long n, long long m) {
+    clock_t spstart, spstop, ppstart, ppstop;
+
+
+    double sswtime, sewtime;
+    //volatile
+
+
+    char* isprime = (char*)calloc(m, sizeof(char));
+
+    isprime[0] = 1;
+    isprime[1] = 1;
+
+
+    sswtime = omp_get_wtime();
+    spstart = clock();
+
+     
+    omp_set_num_threads(Th_num);
+
+    long long j;
+    long long to = sqrt(m);
+
+    #pragma omp parallel
+    {
+    for (long long i = 1; i < to; i++)
+    {
+        //printf("%d ma %d\n",omp_get_thread_num(), i);
+        if (!isprime[i]) {
+            
+            #pragma omp for schedule(static)
+            for (j = i * 2; j < m; j += i)
+                isprime[j] = 1;
+        }
+    }
+    }
+
+
+    spstop = clock();
+    sewtime = omp_get_wtime();
+
+    long long prime_nums = 0;
+
+    for (long long i = n; i < m; i++) {
+        if (!isprime[i])
+            prime_nums++;
+    }
+    printf("%d \n", prime_nums);
+
+    printf("Czas procesorow przetwarzania rownoleglego  %f sekund \n", ((double)(spstop - spstart) / CLOCKS_PER_SEC));
+    printf("Czas trwania obliczen rownoleglego - wallclock %f sekund \n", sewtime - sswtime);
+}
+
 void sito_rownolegle_blokowo(long long n, long long m)
 {
     clock_t spstart, spstop, ppstart, ppstop;
@@ -152,12 +228,17 @@ void sito_rownolegle_blokowo(long long n, long long m)
     sswtime = omp_get_wtime();
     spstart = clock();
 
-    int id;
+    //int id;
+
+
+
     omp_set_num_threads(Th_num);
-    #pragma omp parallel for schedule(static)
-    for ( id = 0; id < omp_get_num_threads(); id++)
+    //#pragma omp parallel for schedule(static)
+   // for ( id = 0; id < omp_get_num_threads(); id++)
+    #pragma omp parallel
     {
-        int slice = m / omp_get_num_threads();
+        int id = omp_get_thread_num();
+        int slice = m / omp_get_num_threads()+1;
 
         int from = id * slice;
         int to = from + slice;
@@ -172,11 +253,11 @@ void sito_rownolegle_blokowo(long long n, long long m)
 
 
 
-        for (long long i = 0; i < to; i++)
+        for (long long i = 0; i < sqrt(to); i++)
         {
             if (!isprime[i])
             {
-                for (long long j = i * 2; j < m; j += i)
+                for (long long j = max(i*2,(from/i)*i); j < m; j += i)
                 {
                     if (j >= from)
                         isprime[j] = 1;
@@ -184,14 +265,13 @@ void sito_rownolegle_blokowo(long long n, long long m)
             }
 
         }
-
     }
 
 
     spstop = clock();
     sewtime = omp_get_wtime();
 
-    long long prime_nums = 0;
+    int prime_nums = 0;
 
     for (long long i = 0; i < m; i++) {
         if (!isprime[i]) {
@@ -204,6 +284,101 @@ void sito_rownolegle_blokowo(long long n, long long m)
     printf("Czas procesorow przetwarzania rownoleglego  %f sekund \n", ((double)(spstop - spstart) / CLOCKS_PER_SEC));
     printf("Czas trwania obliczen rownoleglego - wallclock %f sekund \n", sewtime - sswtime);
 }
+
+void sito_rownolegle_blokowo_v2(long long n, long long m)
+{
+    clock_t spstart, spstop, ppstart, ppstop;
+
+    double sswtime, sewtime;
+    //volatile
+
+    char* isprime = (char*)calloc(m, sizeof(char));
+
+    //memset(isprime, 0, sizeof(isprime));
+    isprime[0] = 1;
+    isprime[1] = 1;
+
+
+    sswtime = omp_get_wtime();
+    spstart = clock();
+
+    //int id;
+
+
+
+    omp_set_num_threads(Th_num);
+    //#pragma omp parallel for schedule(static)
+   // for ( id = 0; id < omp_get_num_threads(); id++)
+#pragma omp parallel
+    {
+        int id = omp_get_thread_num();
+        int slice = m / omp_get_num_threads() + 1;
+
+        int from = id * slice;
+        int to = from + slice;
+        if (to > m)
+            to = m;
+        //printf("%d: %d %d\n", id, from, to);
+        // int to = m - i*slice;
+        // int from = to - slice;
+
+        // if (from < 0)
+        //     from = 0;
+
+        long long i;
+
+        for (i = 0; i < sqrt(to); i++)
+        {
+            if (isprime[i]==0)
+            {
+                if (i < from)
+                  
+                    while (!isprime[i]) {
+                        i--;
+
+                    }
+                else
+                    isprime[i] = 2;
+            }
+            
+            if (isprime[i] == 2)
+            {
+                for (long long j = max(i * 2, (from / i) * i); j < m; j += i)
+                {
+                    if (j >= from)
+                        isprime[j] = 1;
+                }
+            }
+
+        }
+
+        for (; i < to; i++)
+        {
+            if (isprime[i] == 0)
+            {
+                isprime[i] = 2;
+            }
+        }
+    }
+
+
+    spstop = clock();
+    sewtime = omp_get_wtime();
+
+    int prime_nums = 0;
+
+    for (long long i = 0; i < m; i++) {
+        if (isprime[i]==2) {
+            //printf("%d, ", i);
+            prime_nums++;
+        }
+    }
+    printf("%d \n", prime_nums);
+
+    printf("Czas procesorow przetwarzania rownoleglego  %f sekund \n", ((double)(spstop - spstart) / CLOCKS_PER_SEC));
+    printf("Czas trwania obliczen rownoleglego - wallclock %f sekund \n", sewtime - sswtime);
+}
+
 
 void dzielenie_sekwecyjnie(long long min, long long max) {
     clock_t spstart, spstop;
@@ -287,14 +462,16 @@ void dzielenie_rownolegle(long long min, long long max) {
 int main(int argc, char* argv[])
 {
     long long n = 2;
-    long long m = 10000;
+    long long m = 100000000;
 
 
     sito_sekwencyjnie(n,m);
     sito_rownolegle(n,m);
+    sito_rownolegle_v2(n, m);
     sito_rownolegle_blokowo(n,m);
-    dzielenie_sekwecyjnie(n, m);
-    dzielenie_rownolegle(n, m);
+    sito_rownolegle_blokowo_v2(n, m);
+    //dzielenie_sekwecyjnie(n, m);
+    //dzielenie_rownolegle(n, m);
 
     return 0;
 }
