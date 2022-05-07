@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <conio.h>
 
-# define Th_num 6
+# define Th_num 12
 
 void printFirstLast(char* primes, long long max, long long min) {
     long long primeNums = 0;
@@ -88,7 +88,7 @@ void sito_sekwencyjnie(long long n, long long m)
 
     long long to = sqrt(m);
 
-    for (long long i = 0; i < to; i++)
+    for (long long i = 0; i <= to; i++)
     {
 
         if (!isprime[i])
@@ -118,7 +118,7 @@ void sito_sekwencyjnie(long long n, long long m)
     }
     printf("%lld \n", prime_nums);
 
-    printPrimesSito(isprime, m, n);
+    //printPrimesSito(isprime, m, n);
 
     free(isprime);
 
@@ -149,8 +149,8 @@ void sito_rownolegle(long long n, long long m)
 
     long long to = sqrt(m);
 
-    #pragma omp parallel for schedule(static)
-    for (i =1; i<to;i++)
+    #pragma omp parallel for schedule(static) 
+    for (i =1; i<=to;i++)
     {
         //printf("%d ma %d\n",omp_get_thread_num(), i);
         if(!isprime[i])
@@ -199,7 +199,7 @@ void sito_rownolegle_v2(long long n, long long m) {
 
     #pragma omp parallel
     {
-    for (long long i = 1; i < to; i++)
+    for (long long i = 1; i <= to; i++)
     {
         //printf("%d ma %d\n",omp_get_thread_num(), i);
         if (!isprime[i]) {
@@ -269,7 +269,7 @@ void sito_rownolegle_blokowo(long long n, long long m)
 
 
 
-        for (long long i = 0; i < sqrt(to); i++)
+        for (long long i = 0; i <= sqrt(to); i++)
         {
             if (!isprime[i])
             {
@@ -320,12 +320,10 @@ void sito_rownolegle_blokowo_v2(long long n, long long m)
 
     //int id;
 
-
-
     omp_set_num_threads(Th_num);
     //#pragma omp parallel for schedule(static)
-   // for ( id = 0; id < omp_get_num_threads(); id++)
-#pragma omp parallel
+    // for ( id = 0; id < omp_get_num_threads(); id++)
+    #pragma omp parallel
     {
         int id = omp_get_thread_num();
         int slice = m / omp_get_num_threads() + 1;
@@ -343,16 +341,15 @@ void sito_rownolegle_blokowo_v2(long long n, long long m)
 
         long long i;
 
-        for (i = 0; i < sqrt(to); i++)
+        for (i = 0; i <= sqrt(to); i++)
         {
             if (isprime[i]==0)
             {
                 if (i < from)
-                  
-                    while (!isprime[i]) {
+                    i--;
+                    /*while (!isprime[i]) {
                         i--;
-
-                    }
+                    }*/
                 else
                     isprime[i] = 2;
             }
@@ -475,7 +472,7 @@ void dzielenie_rownolegle(long long min, long long max) {
     char* primes;
 
     //RÓWNOLEGLE
-    primes = (char*)calloc(max - min + 1, sizeof(char));
+    primes = (char*)calloc(max - min, sizeof(char));
 
     pswtime = omp_get_wtime();
     ppstart = clock();
@@ -487,7 +484,7 @@ void dzielenie_rownolegle(long long min, long long max) {
         maxp = max;
         long long i;
         #pragma omp for schedule(guided, 40)
-        for (i = 0; i <= maxp - minp; i++) {
+        for (i = 0; i < maxp - minp; i++) {
             primes[i] = 1;
             for (long long j = 2; j <= (long long)ceil(sqrt(i + minp)); j++) {
                 if (((i + minp) % j == 0) && (i + minp != 2)) {
@@ -520,7 +517,7 @@ void dzielenie_rownolegle2(long long min, long long max) {
     char* primes;
 
     //RÓWNOLEGLE
-    primes = (char*)calloc(max - min + 1, sizeof(char));
+    primes = (char*)calloc(max - min, sizeof(char));
     pswtime = omp_get_wtime();
     ppstart = clock();
 
@@ -543,11 +540,11 @@ void dzielenie_rownolegle2(long long min, long long max) {
     }
 
     omp_set_num_threads(Th_num);
-#pragma omp parallel firstprivate(min, max)
+    #pragma omp parallel firstprivate(min, max)
     {
         long long i, j;
-#pragma omp for schedule(guided, 40)
-        for (i = 6 - iterConst; i < max - min + 1 /* || i < max - min - 1*/; i += 6) {
+    #pragma omp for schedule(guided, 40)
+        for (i = 6 - iterConst; i < max - min + 1; i += 6) {
             if (i - 1 >= 0) {
                 primes[i - 1] = 1;
                 if ((i - 1 + min) % 2 == 0 || (i - 1 + min) % 3 == 0) {
@@ -606,14 +603,14 @@ int main(int argc, char* argv[])
     //dzielenie_rownolegle(n, m);
     //dzielenie_rownolegle2(n, m);
 
-    /*
+    ///*
     int min, max;
     srand(time(NULL));
     
     int iStart = 0, iStop = 6, jStart = 0, jStop = 6;
 
 
-    for (int i = iStart; i < jStop; i++) {
+    for (int i = iStart; i < iStop; i++) {
         for (int j = jStart; j < jStop; j++) {
             min = (rand()/6)*6+i;
             max = ((min + rand()) / 6) * 6 + j;
