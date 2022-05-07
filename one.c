@@ -4,14 +4,30 @@
 #include <string.h>
 #include <omp.h>
 #include <stdlib.h>
+#include <conio.h>
 
 # define Th_num 6
+
+void printFirstLast(char* primes, long long max, long long min) {
+    long long primeNums = 0;
+    long long first = -1, last;
+    for (long long i = 0; i < max - min; i++) {
+        if (primes[i] == 1) {
+            primeNums++;
+            if (first == -1)
+                first = i + min;
+            last = i + min;
+        }
+    }
+    printf("%lld %lld\n", first, last);
+    printf("Liczb pierwszych: %lld\n", primeNums);
+}
 
 
 void printPrimes(char* primes, long long max, long long min) {
     long long primeNums = 0;
     int count = 0;
-    for (long long i = 0; i <= max - min; i++) {
+    for (long long i = 0; i < max - min; i++) {
         if (primes[i] == 1) {
             primeNums++;
             count++;
@@ -28,7 +44,7 @@ void printPrimes(char* primes, long long max, long long min) {
 
 void printPrimesNum(char* primes, long long max, long long min) {
     long long primeNums = 0;
-    for (long long i = 0; i <= max - min; i++) {
+    for (long long i = 0; i < max - min; i++) {
         if (primes[i] == 1) primeNums++;
     }
     printf("Liczb pierwszych: %lld\n", primeNums);
@@ -392,28 +408,25 @@ void dzielenie_sekwecyjnie(long long min, long long max) {
     sswtime = omp_get_wtime();
     spstart = clock();
 
-    int start = 0;
-
-
     if (min == 2) {
         primes[0] = 1;
         primes[1] = 1;
-        start = 2;
-    } else if (min == 3) {
+    } 
+    else if (min == 3) {
         primes[0] = 1;
-        start = 1;
     }
 
-    int mult, mod, iterConst;
+    int mod, iterConst;
     mod = min % 6;
-    mult = min / 6;
     iterConst = mod;
-    if (iterConst == 0)
+    if (iterConst == 0) {
         iterConst = 6;
-    else if (iterConst == 1)
+    }
+    else if (iterConst == 1) {
         iterConst = 7;
-
-    for (long long i = 6 - iterConst; i - 1 < max - min || i + 1 < max - min; i+=6) {
+    }
+        
+    for (long long i = 6 - iterConst; i < max - min + 1 /* || i < max - min - 1*/; i+=6) {
         if (i - 1 >= 0) {
             primes[i - 1] = 1;
             if ((i - 1 + min) % 2 == 0 || (i - 1 + min) % 3 == 0) {
@@ -427,7 +440,7 @@ void dzielenie_sekwecyjnie(long long min, long long max) {
                 }
             }
         }
-        if (i + 1 < max - min) {
+        if (i < max - min - 1) {
             primes[i + 1] = 1;
             if ((i + 1 + min) % 2 == 0 || (i + 1 + min) % 3 == 0) {
                 primes[i + 1] = 2;
@@ -446,7 +459,8 @@ void dzielenie_sekwecyjnie(long long min, long long max) {
     sewtime = omp_get_wtime();
 
     //printPrimesNum(primes, max, min);
-    printPrimes(primes, max, min);
+    //printPrimes(primes, max, min);
+    printFirstLast(primes, max, min);
     free(primes);
 
     printf("Czas procesorow przetwarzania sekwencyjnego  %f sekund \n", ((double)(spstop - spstart) / CLOCKS_PER_SEC));
@@ -461,7 +475,7 @@ void dzielenie_rownolegle(long long min, long long max) {
     char* primes;
 
     //RÓWNOLEGLE
-    primes = (char*)calloc(max - min, sizeof(char));
+    primes = (char*)calloc(max - min + 1, sizeof(char));
 
     pswtime = omp_get_wtime();
     ppstart = clock();
@@ -487,8 +501,9 @@ void dzielenie_rownolegle(long long min, long long max) {
     ppstop = clock();
     pewtime = omp_get_wtime();
 
-    printPrimes(primes, max, min);
+    //printPrimes(primes, max, min);
     //printPrimesNum(primes, max, min);
+    printFirstLast(primes, max, min);
 
     free(primes);
 
@@ -496,10 +511,90 @@ void dzielenie_rownolegle(long long min, long long max) {
     printf("Czas trwania obliczen rownoleglego - wallclock %f sekund \n", pewtime - pswtime);
 }
 
+///*
+void dzielenie_rownolegle2(long long min, long long max) {
+    clock_t ppstart, ppstop;
+    double pswtime, pewtime;
+
+    //1 - prime, 2 - not a prime
+    char* primes;
+
+    //RÓWNOLEGLE
+    primes = (char*)calloc(max - min + 1, sizeof(char));
+    pswtime = omp_get_wtime();
+    ppstart = clock();
+
+    if (min == 2) {
+        primes[0] = 1;
+        primes[1] = 1;
+    }
+    else if (min == 3) {
+        primes[0] = 1;
+    }
+
+    int mod, iterConst;
+    mod = min % 6;
+    iterConst = mod;
+    if (iterConst == 0) {
+        iterConst = 6;
+    }
+    else if (iterConst == 1) {
+        iterConst = 7;
+    }
+
+    omp_set_num_threads(Th_num);
+#pragma omp parallel firstprivate(min, max)
+    {
+        long long i, j;
+#pragma omp for schedule(guided, 40)
+        for (i = 6 - iterConst; i < max - min + 1 /* || i < max - min - 1*/; i += 6) {
+            if (i - 1 >= 0) {
+                primes[i - 1] = 1;
+                if ((i - 1 + min) % 2 == 0 || (i - 1 + min) % 3 == 0) {
+                    primes[i - 1] = 2;
+                    continue;
+                }
+                for (j = 6; j - 1 <= (long long)ceil(sqrt(i - 1 + min)); j += 6) {
+                    if ((i - 1 + min) % (j - 1) == 0 || (i - 1 + min) % (j + 1) == 0) {
+                        primes[i - 1] = 2;
+                        break;
+                    }
+                }
+            }
+            if (i + 1 < max - min) {
+                primes[i + 1] = 1;
+                if ((i + 1 + min) % 2 == 0 || (i + 1 + min) % 3 == 0) {
+                    primes[i + 1] = 2;
+                    continue;
+                }
+                for (j = 6; j - 1 <= (long long)ceil(sqrt(i + 1 + min)); j += 6) {
+                    if ((i + 1 + min) % (j - 1) == 0 || (i + 1 + min) % (j + 1) == 0) {
+                        primes[i + 1] = 2;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    ppstop = clock();
+    pewtime = omp_get_wtime();
+
+    //printPrimes(primes, max, min);
+    //printPrimesNum(primes, max, min);
+    printFirstLast(primes, max, min);
+
+    free(primes);
+
+    printf("Czas procesorow przetwarzania rownoleglego  %f sekund \n", ((double)(ppstop - ppstart) / CLOCKS_PER_SEC));
+    printf("Czas trwania obliczen rownoleglego - wallclock %f sekund \n", pewtime - pswtime);
+}
+//*/
+
 int main(int argc, char* argv[])
 {
     long long n = 2;
-    long long m = 10000;
+    long long m = 100000;
 
 
     //sito_sekwencyjnie(n,m);
@@ -509,26 +604,27 @@ int main(int argc, char* argv[])
     //sito_rownolegle_blokowo_v2(n, m);
     //dzielenie_sekwecyjnie(n, m);
     //dzielenie_rownolegle(n, m);
-    
-    //dzielenie_rownolegle(96, 26670);
-    sito_sekwencyjnie(96, 26670);
-    dzielenie_sekwecyjnie(96, 26670);
+    //dzielenie_rownolegle2(n, m);
 
     /*
     int min, max;
     srand(time(NULL));
     
-    for (int i = 0; i < 6; i++) {
-        for (int j = 0; j < 6; j++) {
+    int iStart = 0, iStop = 6, jStart = 0, jStop = 6;
+
+
+    for (int i = iStart; i < jStop; i++) {
+        for (int j = jStart; j < jStop; j++) {
             min = (rand()/6)*6+i;
             max = ((min + rand()) / 6) * 6 + j;
             printf("i: %d, j: %d\n", i, j);
             printf("min: %d, max: %d\n", min, max);
-            dzielenie_sekwecyjnie(min, max);
-            sito_sekwencyjnie(min, max);
+            //dzielenie_sekwecyjnie(min, max);
+            dzielenie_rownolegle(min, max);
+            dzielenie_rownolegle2(min, max);
         }
     }
-    */
+    //*/
     return 0;
 }
 
