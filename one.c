@@ -149,7 +149,7 @@ void sito_rownolegle(long long n, long long m)
 
     long long to = sqrt(m);
 
-    #pragma omp parallel for schedule(static) 
+    #pragma omp parallel for schedule(dynamic,1) 
     for (i =1; i<=to;i++)
     {
         //printf("%d ma %d\n",omp_get_thread_num(), i);
@@ -204,7 +204,7 @@ void sito_rownolegle_v2(long long n, long long m) {
         //printf("%d ma %d\n",omp_get_thread_num(), i);
         if (!isprime[i]) {
             
-            #pragma omp for schedule(static)
+            #pragma omp for schedule(static) nowait
             for (j = i * 2; j < m; j += i)
                 isprime[j] = 1;
         }
@@ -250,7 +250,7 @@ void sito_rownolegle_blokowo(long long n, long long m)
 
     omp_set_num_threads(Th_num);
     //#pragma omp parallel for schedule(static)
-   // for ( id = 0; id < omp_get_num_threads(); id++)
+    // for ( id = 0; id < omp_get_num_threads(); id++)
     #pragma omp parallel
     {
         int id = omp_get_thread_num();
@@ -464,7 +464,7 @@ void dzielenie_sekwecyjnie(long long min, long long max) {
     printf("Czas trwania obliczen sekwencyjnego - wallclock %f sekund \n", sewtime - sswtime);
 }
 
-void dzielenie_rownolegle(long long min, long long max) {
+void dzielenie_rownolegle_OLD(long long min, long long max) {
     clock_t ppstart, ppstop;
     double pswtime, pewtime;
 
@@ -509,7 +509,7 @@ void dzielenie_rownolegle(long long min, long long max) {
 }
 
 ///*
-void dzielenie_rownolegle2(long long min, long long max) {
+void dzielenie_rownolegle(long long min, long long max) {
     clock_t ppstart, ppstop;
     double pswtime, pewtime;
 
@@ -540,7 +540,7 @@ void dzielenie_rownolegle2(long long min, long long max) {
     }
 
     omp_set_num_threads(Th_num);
-    #pragma omp parallel firstprivate(min, max)
+    #pragma omp parallel
     {
         long long i, j;
     #pragma omp for schedule(guided, 40)
@@ -591,19 +591,20 @@ void dzielenie_rownolegle2(long long min, long long max) {
 int main(int argc, char* argv[])
 {
     long long n = 2;
-    long long m = 100000;
+    long long m = 500000;
 
 
     //sito_sekwencyjnie(n,m);
+    printf("sito rownolegle\n");
     //sito_rownolegle(n,m);
     //sito_rownolegle_v2(n, m);
     //sito_rownolegle_blokowo(n,m);
     //sito_rownolegle_blokowo_v2(n, m);
     //dzielenie_sekwecyjnie(n, m);
-    //dzielenie_rownolegle(n, m);
-    //dzielenie_rownolegle2(n, m);
+    //dzielenie_rownolegle_OLD(n, m);
+    dzielenie_rownolegle(n, m);
 
-    ///*
+    /*
     int min, max;
     srand(time(NULL));
     
@@ -617,8 +618,8 @@ int main(int argc, char* argv[])
             printf("i: %d, j: %d\n", i, j);
             printf("min: %d, max: %d\n", min, max);
             //dzielenie_sekwecyjnie(min, max);
+            dzielenie_rownolegle_OLD(min, max);
             dzielenie_rownolegle(min, max);
-            dzielenie_rownolegle2(min, max);
         }
     }
     //*/
