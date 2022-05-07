@@ -16,14 +16,14 @@ void printPrimes(char* primes, long long max, long long min) {
             primeNums++;
             count++;
             if (count == 10) {
-                printf("%d\n", i + min);
+                printf("%lld\n", i + min);
                 count = 0;
             }
             else
-                printf("%d ", i + min);
+                printf("%lld ", i + min);
         }
     }
-    printf("\nLiczb pierwszych: %d\n", primeNums);
+    printf("\nLiczb pierwszych: %lld\n", primeNums);
 }
 
 void printPrimesNum(char* primes, long long max, long long min) {
@@ -31,22 +31,21 @@ void printPrimesNum(char* primes, long long max, long long min) {
     for (long long i = 0; i <= max - min; i++) {
         if (primes[i] == 1) primeNums++;
     }
-    printf("Liczb pierwszych: %d\n", primeNums);
+    printf("Liczb pierwszych: %lld\n", primeNums);
 }
 
 void printPrimesSito(char* primes, long long max, long long min)
 {
-    
     int count = 0;
     for (long long i = 0; i <= max - min; i++) {
         if (primes[i] == 0) {
             count++;
             if (count == 10) {
-                printf("%d\n", i + min);
+                printf("%lld\n", i + min);
                 count = 0;
             }
             else
-                printf("%d ", i + min);
+                printf("%lld ", i + min);
         }
     }
 }
@@ -101,9 +100,11 @@ void sito_sekwencyjnie(long long n, long long m)
             //printf("%d, ",i);
             prime_nums++;
     }
-    printf("%d \n", prime_nums);
+    printf("%lld \n", prime_nums);
 
-    //printPrimesNum(primes, m, n);
+    printPrimesSito(isprime, m, n);
+
+    free(isprime);
 
     printf("Czas procesorow przetwarzania sekwencyjnego  %f sekund \n", ((double)(spstop - spstart) / CLOCKS_PER_SEC));
     printf("Czas trwania obliczen sekwencyjnych - wallclock %f sekund \n", sewtime - sswtime);
@@ -151,12 +152,11 @@ void sito_rownolegle(long long n, long long m)
         if(!isprime[i])
             prime_nums++;
     }
-    printf("%d \n",prime_nums);
+    printf("%lld \n",prime_nums);
 
 	printf("Czas procesorow przetwarzania rownoleglego  %f sekund \n", ((double)(spstop - spstart)/CLOCKS_PER_SEC));
 	printf("Czas trwania obliczen rownoleglego - wallclock %f sekund \n",  sewtime-sswtime);	
 }
-
 
 void sito_rownolegle_v2(long long n, long long m) {
     clock_t spstart, spstop, ppstart, ppstop;
@@ -205,7 +205,7 @@ void sito_rownolegle_v2(long long n, long long m) {
         if (!isprime[i])
             prime_nums++;
     }
-    printf("%d \n", prime_nums);
+    printf("%lld \n", prime_nums);
 
     printf("Czas procesorow przetwarzania rownoleglego  %f sekund \n", ((double)(spstop - spstart) / CLOCKS_PER_SEC));
     printf("Czas trwania obliczen rownoleglego - wallclock %f sekund \n", sewtime - sswtime);
@@ -392,16 +392,52 @@ void dzielenie_sekwecyjnie(long long min, long long max) {
     sswtime = omp_get_wtime();
     spstart = clock();
 
-    long long minp, maxp;
-    minp = min;
-    maxp = max;
+    int start = 0;
 
-    for (long long i = 0; i <= max - min; i++) {
-        primes[i] = 1;
-        for (long long j = 2; j <= (long long)ceil(sqrt(i + min)); j++) {
-            if (((i + min) % j == 0) && (i + min != 2)) {
-                primes[i] = 2;
-                break;
+
+    if (min == 2) {
+        primes[0] = 1;
+        primes[1] = 1;
+        start = 2;
+    } else if (min == 3) {
+        primes[0] = 1;
+        start = 1;
+    }
+
+    int mult, mod, iterConst;
+    mod = min % 6;
+    mult = min / 6;
+    iterConst = mod;
+    if (iterConst == 0)
+        iterConst = 6;
+    else if (iterConst == 1)
+        iterConst = 7;
+
+    for (long long i = 6 - iterConst; i - 1 < max - min || i + 1 < max - min; i+=6) {
+        if (i - 1 >= 0) {
+            primes[i - 1] = 1;
+            if ((i - 1 + min) % 2 == 0 || (i - 1 + min) % 3 == 0) {
+                primes[i - 1] = 2;
+                continue;
+            }
+            for (long long j = 6; j - 1 <= (long long)ceil(sqrt(i - 1 + min)); j+=6) {
+                if ((i - 1 + min) % (j - 1) == 0 || (i - 1 + min) % (j + 1) == 0) {
+                    primes[i - 1] = 2;
+                    break;
+                }
+            }
+        }
+        if (i + 1 < max - min) {
+            primes[i + 1] = 1;
+            if ((i + 1 + min) % 2 == 0 || (i + 1 + min) % 3 == 0) {
+                primes[i + 1] = 2;
+                continue;
+            }
+            for (long long j = 6; j - 1 <= (long long)ceil(sqrt(i + 1 + min)); j += 6) {
+                if ((i + 1 + min) % (j - 1) == 0 || (i + 1 + min) % (j + 1) == 0) {
+                    primes[i + 1] = 2;
+                    break;
+                }
             }
         }
     }
@@ -409,8 +445,8 @@ void dzielenie_sekwecyjnie(long long min, long long max) {
     spstop = clock();
     sewtime = omp_get_wtime();
 
-    printPrimesNum(primes, max, min);
-
+    //printPrimesNum(primes, max, min);
+    printPrimes(primes, max, min);
     free(primes);
 
     printf("Czas procesorow przetwarzania sekwencyjnego  %f sekund \n", ((double)(spstop - spstart) / CLOCKS_PER_SEC));
@@ -451,7 +487,8 @@ void dzielenie_rownolegle(long long min, long long max) {
     ppstop = clock();
     pewtime = omp_get_wtime();
 
-    printPrimesNum(primes, max, min);
+    printPrimes(primes, max, min);
+    //printPrimesNum(primes, max, min);
 
     free(primes);
 
@@ -462,17 +499,36 @@ void dzielenie_rownolegle(long long min, long long max) {
 int main(int argc, char* argv[])
 {
     long long n = 2;
-    long long m = 100000000;
+    long long m = 10000;
 
 
-    sito_sekwencyjnie(n,m);
-    sito_rownolegle(n,m);
-    sito_rownolegle_v2(n, m);
-    sito_rownolegle_blokowo(n,m);
-    sito_rownolegle_blokowo_v2(n, m);
+    //sito_sekwencyjnie(n,m);
+    //sito_rownolegle(n,m);
+    //sito_rownolegle_v2(n, m);
+    //sito_rownolegle_blokowo(n,m);
+    //sito_rownolegle_blokowo_v2(n, m);
     //dzielenie_sekwecyjnie(n, m);
     //dzielenie_rownolegle(n, m);
+    
+    //dzielenie_rownolegle(96, 26670);
+    sito_sekwencyjnie(96, 26670);
+    dzielenie_sekwecyjnie(96, 26670);
 
+    /*
+    int min, max;
+    srand(time(NULL));
+    
+    for (int i = 0; i < 6; i++) {
+        for (int j = 0; j < 6; j++) {
+            min = (rand()/6)*6+i;
+            max = ((min + rand()) / 6) * 6 + j;
+            printf("i: %d, j: %d\n", i, j);
+            printf("min: %d, max: %d\n", min, max);
+            dzielenie_sekwecyjnie(min, max);
+            sito_sekwencyjnie(min, max);
+        }
+    }
+    */
     return 0;
 }
 

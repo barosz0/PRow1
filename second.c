@@ -7,7 +7,7 @@
 
 
 
-int main(int argc, char* argv[])
+int mainY(int argc, char* argv[])
 {
 	clock_t spstart, spstop,ppstart,ppstop;
 	
