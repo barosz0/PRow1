@@ -1,3 +1,6 @@
+//Bartosz Paliński 145224 L1
+//Patryk Chmielecki 145190 L1
+
 #include <stdio.h>
 #include <time.h>
 #include <math.h>
@@ -506,7 +509,7 @@ void dzielenie_rownolegle(long long min, long long max) {
 int main(int argc, char* argv[])
 {
     long long n = 2;
-    long long m = 100;
+    long long m = 50000000;
 
 
     //sito_sekwencyjnie(n,m);
